@@ -33,8 +33,17 @@ mongodb:
 
 keycloak:
   create: true
+  # Bitnami purged legacy tags from public.ecr.aws/bitnami/* in their Aug-2025
+  # "Secure Images" migration. The chart-pinned tags still exist at
+  # docker.io/bitnamilegacy/* — point both keycloak and its embedded postgres
+  # sub-chart there.
   image:
-    registry: public.ecr.aws
+    registry: docker.io
+    repository: bitnamilegacy/keycloak
+  postgresql:
+    image:
+      registry: docker.io
+      repository: bitnamilegacy/postgresql
   global:
     security:
       allowInsecureImages: true
@@ -63,7 +72,11 @@ mongodb-configure:
 registry:
   app:
     replicas: 1
-    deploymentMode: registry-only
+    # with-gateway makes the registry act as the gateway: its embedded nginx
+    # auto-generates a per-server location block (with auth_request) whenever a
+    # server is registered/enabled/disabled/deleted, so the registry actually
+    # controls live MCP traffic. registry-only is catalog-only (no routing).
+    deploymentMode: with-gateway
     registryMode: full
     skillSecurityScanEnabled: false
   ingress:

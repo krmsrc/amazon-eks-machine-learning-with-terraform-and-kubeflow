@@ -1,0 +1,52 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: sample-time-server
+  namespace: mcp-gateway
+  labels:
+    app: sample-time-server
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: sample-time-server
+  template:
+    metadata:
+      labels:
+        app: sample-time-server
+    spec:
+      containers:
+        - name: server
+          image: IMAGE_PLACEHOLDER
+          ports:
+            - containerPort: 8000
+          env:
+            - name: PORT
+              value: "8000"
+          readinessProbe:
+            tcpSocket:
+              port: 8000
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          resources:
+            requests:
+              cpu: 50m
+              memory: 64Mi
+            limits:
+              cpu: 250m
+              memory: 256Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: sample-time-server
+  namespace: mcp-gateway
+  labels:
+    app: sample-time-server
+spec:
+  selector:
+    app: sample-time-server
+  ports:
+    - name: http
+      port: 8000
+      targetPort: 8000
